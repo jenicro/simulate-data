@@ -1,10 +1,11 @@
 from simulate_data.survey_simulator import SurveyDataset
 import numpy as np
-#from factor_analyzer import FactorAnalyzer
+from factor_analyzer import FactorAnalyzer
 import pandas as pd
 import matplotlib.pyplot as plt
-#from factor_analyzer.factor_analyzer import calculate_bartlett_sphericity, calculate_kmo, FactorAnalyzer
+from factor_analyzer.factor_analyzer import calculate_bartlett_sphericity, calculate_kmo, FactorAnalyzer
 import seaborn as sns
+from pathlib import Path
 
 
 if __name__ == "__main__":
@@ -56,10 +57,17 @@ if __name__ == "__main__":
         rho_time = 0.6,
         sigma_time = 1.0,
         var_shares_levels = (0.1, 0.5, 0.4),
-        units_levels = (3, 100, 10),
+        units_levels = (10, 50, 10),
     )
 
-    df_wide, df_long, df_meta = survey_dataset.simulate()
+    df_wide, df_long, df_meta, df_theta = survey_dataset.simulate(normalize_empirical_theta=True)
+    here = Path(__name__).parent
+    dir_data = here / "data" / "sim_hpi_3_waves"
+    assert dir_data.exists()
+    df_long.to_csv(dir_data / "long.csv")
+    df_meta.to_csv(dir_data / "meta.csv")
+    df_theta.to_csv(dir_data / "theta.csv")
+    survey_dataset.item_summary.to_json(dir_data / "item_summary.json", orient="records", indent=2)
 
     # Step 1: compute eigenvalues of the correlation matrix
 
@@ -88,7 +96,7 @@ if __name__ == "__main__":
     # =====================================
     # 2. Unrotated Factor Analysis
     # =====================================
-    n_factors = 5
+    n_factors = 15
     fa_unrot = FactorAnalyzer(n_factors=n_factors, rotation=None, method="minres")
     fa_unrot.fit(df_items)
 
